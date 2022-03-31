@@ -3,7 +3,7 @@
 This project is a sample character controls demo to demonstrate how you can use Requirements Engineering
 to develop a basic character controller.
 
-OpenKCC is an open source project hosted at
+This project is based off the open source OpenKCC project hosted at
 [https://github.com/nicholas-maltbie/OpenKCC](https://github.com/nicholas-maltbie/OpenKCC)
 
 This is an open source project licensed under a [MIT License](LICENSE.txt). Feel free to use a build of the project for
