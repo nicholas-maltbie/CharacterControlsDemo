@@ -89,8 +89,9 @@ namespace CCDemo.Tests
         /// </summary>
         /// <param name="time">Expected time to pass</param>
         /// <param name="expected">Expected distance for player to move.</param>
+        /// <param name="error">Expected error in final player position.</param>
         /// <returns>Enumerator of waiting events for player movement.</returns>
-        public IEnumerator ValidateMovement(float time, Vector3 expected)
+        public IEnumerator ValidateMovement(float time, Vector3 expected, float error = 0.1f)
         {
             // Measure start position
             Vector3 start = this.character.transform.position;
@@ -103,8 +104,33 @@ namespace CCDemo.Tests
             Vector3 movement = end - start;
 
             Assert.IsTrue(
-                WithinBounds(movement, expected, 0.1f),
+                this.WithinBounds(movement, expected, error),
                 $"Expected player to move {expected.ToString("F3")}, but instead found {movement.ToString("F3")}");
+
+            yield return null;
+        }
+
+        /// <summary>
+        /// Validate player rotation for a give period of time in a given direction.
+        /// </summary>
+        /// <param name="time">Expected time to pass</param>
+        /// <param name="expected">Expected rotation for player in euler angles.</param>
+        /// <returns>Enumerator of waiting events for player rotation.</returns>
+        public IEnumerator ValidateRotation(float time, Vector3 expected)
+        {
+            // Measure starting attitude
+            Quaternion start = this.character.transform.rotation;
+
+            // Wait for a second
+            yield return new WaitForSeconds(time);
+
+            // Assert that the player has moved forward
+            Quaternion end = this.character.transform.rotation;
+            Quaternion expectedFinal = start * Quaternion.Euler(expected);
+
+            Assert.IsTrue(
+                this.WithinBounds(end.eulerAngles, expectedFinal.eulerAngles, 10.0f),
+                $"Expected player to be at {expectedFinal.eulerAngles.ToString("F3")}, but instead found {end.eulerAngles.ToString("F3")}");
 
             yield return null;
         }
@@ -147,24 +173,10 @@ namespace CCDemo.Tests
         [UnityTest]
         public IEnumerator CharacterControlsRotate()
         {
-            // Measure starting attitude
-            Quaternion start = this.character.transform.rotation;
-
+            float time = 1.0f;
             // Set input action to look to the left
             this.Set(this.gamepad.rightStick, Vector2.left);
-
-            // Wait for a second
-            float time = 1.0f;
-            yield return new WaitForSeconds(time);
-
-            // Assert that the player has moved forward
-            Quaternion end = this.character.transform.rotation;
-            Quaternion expected = start * Quaternion.Euler(0, time * this.character.rotationSpeed, 0);
-
-            Assert.IsTrue(
-                WithinBounds(end.eulerAngles, expected.eulerAngles, 10.0f),
-                $"Expected player to be at {expected.eulerAngles.ToString("F3")}, but instead found {end.eulerAngles.ToString("F3")}");
-
+            yield return this.ValidateRotation(time, new Vector3(0, 180, 0));
             yield return null;
         }
 
@@ -176,11 +188,35 @@ namespace CCDemo.Tests
         public IEnumerator CharacterControlsMoveInDirection()
         {
             // Set the player facing to the right and move forward
-            Quaternion attitude = Quaternion.LookRotation(Vector3.left, Vector3.up);
+            var attitude = Quaternion.LookRotation(Vector3.left, Vector3.up);
             this.character.SetAttitude(new Vector2(attitude.eulerAngles.x, attitude.eulerAngles.y));
             float time = 1.0f;
             this.Set(this.gamepad.leftStick, Vector2.up);
             yield return this.ValidateMovement(time, Vector3.left * time * this.character.playerSpeed);
+        }
+
+        /// <summary>
+        /// Move and turn the player in the same test.
+        /// </summary>
+        /// <returns>Enumerator test events.</returns>
+        [UnityTest]
+        public IEnumerator CharacterControlsMoveAndTurn()
+        {
+            float time = 1.0f;
+
+            // Set input action to move forward
+            this.Set(this.gamepad.leftStick, Vector2.up);
+            yield return this.ValidateMovement(time, Vector3.forward * time * this.character.playerSpeed);
+
+            // Set input action to not move and turn
+            this.Set(this.gamepad.leftStick, Vector2.zero);
+            this.Set(this.gamepad.rightStick, Vector2.left);
+            yield return this.ValidateRotation(time, new Vector3(0, 180, 0));
+
+            // Move again but should be moving backward now
+            this.Set(this.gamepad.leftStick, Vector2.up);
+            this.Set(this.gamepad.rightStick, Vector2.zero);
+            yield return this.ValidateMovement(time, Vector3.back * time * this.character.playerSpeed, error: 1.0f);
         }
     }
 }
