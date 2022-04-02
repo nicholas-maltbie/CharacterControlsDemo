@@ -40,7 +40,7 @@ namespace CCDemo
     /// </summary>
     public class CharacterControls : MonoBehaviour
     {
-        
+
         /// <summary>
         /// Look action reference to modify the player camera.
         /// </summary>
@@ -86,16 +86,17 @@ namespace CCDemo
         /// </summary>
         public void Start()
         {
-            playerState = PlayerState.Idle;
-            attitude = Vector3.zero;
+            this.playerState = PlayerState.Idle;
+            this.attitude = Vector3.zero;
 
-            if (moveActionReference != null)
+            if (this.moveActionReference != null)
             {
-                this.moveAction = moveActionReference.action;
+                this.moveAction = this.moveActionReference.action;
             }
-            if (lookActionReference != null)
+
+            if (this.lookActionReference != null)
             {
-                this.lookAction = lookActionReference.action;
+                this.lookAction = this.lookActionReference.action;
             }
 
             this.moveAction.Enable();
@@ -116,21 +117,21 @@ namespace CCDemo
         /// </summary>
         public void Update()
         {
-            Vector2 movementInput = moveAction.ReadValue<Vector2>();
-            Vector2 lookInput = lookAction.ReadValue<Vector2>();
+            Vector2 movementInput = this.moveAction.ReadValue<Vector2>();
+            Vector2 lookInput = this.lookAction.ReadValue<Vector2>();
 
             // Move camera with player
-            CameraFollow();
+            this.CameraFollow();
 
             // Is the player moving
             bool moving = movementInput.magnitude > 0.001f;
 
             // Handle state transition if needed.
-            switch (playerState)
+            switch (this.playerState)
             {
                 case PlayerState.Uninitialized:
                     // Always transition from Uninitialized to idle
-                    playerState = PlayerState.Idle;
+                    this.playerState = PlayerState.Idle;
                     break;
                 case PlayerState.Idle:
                     // Transition to walking state if player is moving
@@ -138,6 +139,7 @@ namespace CCDemo
                     {
                         this.playerState = PlayerState.Walking;
                     }
+
                     break;
                 case PlayerState.Walking:
                     // Transition o idle state if player is not moving
@@ -145,6 +147,7 @@ namespace CCDemo
                     {
                         this.playerState = PlayerState.Idle;
                     }
+
                     break;
             }
 
@@ -153,12 +156,12 @@ namespace CCDemo
             {
                 case PlayerState.Idle:
                     // only rotate camera when idle
-                    RotatePlayer(lookInput);
+                    this.RotatePlayer(lookInput);
                     break;
                 case PlayerState.Walking:
                     // rotate camera and move player when walking
-                    RotatePlayer(lookInput);
-                    MovePlayer(movementInput);
+                    this.RotatePlayer(lookInput);
+                    this.MovePlayer(movementInput);
                     break;
             }
         }
@@ -169,9 +172,9 @@ namespace CCDemo
         /// <param name="lookInput">Look input value for the player.</param>
         public void RotatePlayer(Vector2 lookInput)
         {
-            Vector2 scaledInput = lookInput * Time.deltaTime * rotationSpeed;
+            Vector2 scaledInput = lookInput * Time.deltaTime * this.rotationSpeed;
             this.attitude += new Vector2(-scaledInput.y, scaledInput.x);
-            transform.rotation = Quaternion.Euler(this.attitude.x, this.attitude.y, 0);
+            this.transform.rotation = Quaternion.Euler(this.attitude.x, this.attitude.y, 0);
         }
 
         /// <summary>
@@ -181,8 +184,8 @@ namespace CCDemo
         {
             if (Camera.main != null)
             {
-                Camera.main.transform.position = transform.position;
-                Camera.main.transform.rotation = Quaternion.Euler(attitude.x, attitude.y, 0);
+                Camera.main.transform.position = this.transform.position;
+                Camera.main.transform.rotation = Quaternion.Euler(this.attitude.x, this.attitude.y, 0);
             }
         }
 
@@ -196,11 +199,11 @@ namespace CCDemo
             movementInput = movementInput.magnitude > 1 ? movementInput.normalized : movementInput;
 
             // Compute rotated player movement
-            Vector3 rotatedMovement = transform.rotation * new Vector3(movementInput.x, 0, movementInput.y);
+            Vector3 rotatedMovement = this.transform.rotation * new Vector3(movementInput.x, 0, movementInput.y);
 
             // Scale movement based on speed
-            Vector3 movement = rotatedMovement * Time.deltaTime * playerSpeed;
-            transform.position += movement;
+            Vector3 movement = rotatedMovement * Time.deltaTime * this.playerSpeed;
+            this.transform.position += movement;
         }
     }
 }

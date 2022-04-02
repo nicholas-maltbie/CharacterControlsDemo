@@ -65,7 +65,7 @@ namespace CCDemo.Tests
         /// <returns>True if the angle between a and b are within a specific amount.</returns>
         public bool WithinBounds(Quaternion a, Quaternion b, float angle)
         {
-            return Quaternion.Angle(a, b)  <= angle;
+            return Quaternion.Angle(a, b) <= angle;
         }
 
         /// <summary>
@@ -91,9 +91,9 @@ namespace CCDemo.Tests
             this.gamepad = InputSystem.AddDevice<Gamepad>();
 
             // Setup a main camera
-            mainCamera = new GameObject();
-            mainCamera.AddComponent<Camera>();
-            mainCamera.gameObject.tag = "MainCamera";
+            this.mainCamera = new GameObject();
+            this.mainCamera.AddComponent<Camera>();
+            this.mainCamera.gameObject.tag = "MainCamera";
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace CCDemo.Tests
         public override void TearDown()
         {
             GameObject.DestroyImmediate(this.character.gameObject);
-            GameObject.DestroyImmediate(mainCamera);
+            GameObject.DestroyImmediate(this.mainCamera);
             base.TearDown();
         }
 
@@ -247,16 +247,16 @@ namespace CCDemo.Tests
         /// </summary>
         public void ValidateCameraFollowingPlayer()
         {
-            Vector3 expectedPosition = character.transform.position;
+            Vector3 expectedPosition = this.character.transform.position;
             Vector3 actualPosition = Camera.main.gameObject.transform.position;
             Assert.IsTrue(
-                WithinBounds(expectedPosition, actualPosition, 0.1f),
+                this.WithinBounds(expectedPosition, actualPosition, 0.1f),
                 $"Expected camera position to be {expectedPosition.ToString("F3")}, but instead found {actualPosition.ToString("F3")}");
 
-            Quaternion expectedRotation = Quaternion.Euler(character.attitude.x, character.attitude.y, 0);
+            var expectedRotation = Quaternion.Euler(this.character.attitude.x, this.character.attitude.y, 0);
             Quaternion actualRotation = Camera.main.gameObject.transform.rotation;
             Assert.IsTrue(
-                WithinBounds(expectedRotation, actualRotation, 10f),
+                this.WithinBounds(expectedRotation, actualRotation, 10f),
                 $"Expected camera rotation to be {expectedRotation.ToString("F3")} but instead found {actualRotation.ToString("F3")}");
         }
 
@@ -273,13 +273,13 @@ namespace CCDemo.Tests
 
             // Validate camera starts with player
             yield return null;
-            ValidateCameraFollowingPlayer();
+            this.ValidateCameraFollowingPlayer();
 
             // Wait for a delay and validate the camera moves with the player
             for (int i = 0; i < 5; i++)
             {
                 yield return new WaitForSeconds(0.5f);
-                ValidateCameraFollowingPlayer();
+                this.ValidateCameraFollowingPlayer();
             }
         }
     }
