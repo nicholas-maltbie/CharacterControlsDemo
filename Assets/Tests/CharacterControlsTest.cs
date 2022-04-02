@@ -40,6 +40,11 @@ namespace CCDemo.Tests
         private Gamepad gamepad;
 
         /// <summary>
+        /// Main camera for player view.
+        /// </summary>
+        private GameObject mainCamera;
+
+        /// <summary>
         /// Are two vectors close enough for a given distance.
         /// </summary>
         /// <param name="a">Vector one.</param>
@@ -49,6 +54,18 @@ namespace CCDemo.Tests
         public bool WithinBounds(Vector3 a, Vector3 b, float dist)
         {
             return (a - b).magnitude <= dist;
+        }
+
+        /// <summary>
+        /// Are two angles within a small enough distance to each other.
+        /// </summary>
+        /// <param name="a">Rotation one.</param>
+        /// <param name="b">Rotation two.</param>
+        /// <param name="angle">Threshold angle between the two.</param>
+        /// <returns>True if the angle between a and b are within a specific amount.</returns>
+        public bool WithinBounds(Quaternion a, Quaternion b, float angle)
+        {
+            return Quaternion.Angle(a, b)  <= angle;
         }
 
         /// <summary>
@@ -72,6 +89,11 @@ namespace CCDemo.Tests
 
             // Setup gamepad, needs to be done in SetUp method
             this.gamepad = InputSystem.AddDevice<Gamepad>();
+
+            // Setup a main camera
+            mainCamera = new GameObject();
+            mainCamera.AddComponent<Camera>();
+            mainCamera.gameObject.tag = "MainCamera";
         }
 
         /// <summary>
@@ -81,6 +103,7 @@ namespace CCDemo.Tests
         public override void TearDown()
         {
             GameObject.DestroyImmediate(this.character.gameObject);
+            GameObject.DestroyImmediate(mainCamera);
             base.TearDown();
         }
 
@@ -129,7 +152,7 @@ namespace CCDemo.Tests
             Quaternion expectedFinal = start * Quaternion.Euler(expected);
 
             Assert.IsTrue(
-                this.WithinBounds(end.eulerAngles, expectedFinal.eulerAngles, 10.0f),
+                this.WithinBounds(end, expectedFinal, 10.0f),
                 $"Expected player to be at {expectedFinal.eulerAngles.ToString("F3")}, but instead found {end.eulerAngles.ToString("F3")}");
 
             yield return null;
@@ -217,6 +240,47 @@ namespace CCDemo.Tests
             this.Set(this.gamepad.leftStick, Vector2.up);
             this.Set(this.gamepad.rightStick, Vector2.zero);
             yield return this.ValidateMovement(time, Vector3.back * time * this.character.playerSpeed, error: 1.0f);
+        }
+
+        /// <summary>
+        /// Validate that the camera position is within some bounds of the current player position.
+        /// </summary>
+        public void ValidateCameraFollowingPlayer()
+        {
+            Vector3 expectedPosition = character.transform.position;
+            Vector3 actualPosition = Camera.main.gameObject.transform.position;
+            Assert.IsTrue(
+                WithinBounds(expectedPosition, actualPosition, 0.1f),
+                $"Expected camera position to be {expectedPosition.ToString("F3")}, but instead found {actualPosition.ToString("F3")}");
+
+            Quaternion expectedRotation = Quaternion.Euler(character.attitude.x, character.attitude.y, 0);
+            Quaternion actualRotation = Camera.main.gameObject.transform.rotation;
+            Assert.IsTrue(
+                WithinBounds(expectedRotation, actualRotation, 10f),
+                $"Expected camera rotation to be {expectedRotation.ToString("F3")} but instead found {actualRotation.ToString("F3")}");
+        }
+
+        /// <summary>
+        /// Valdate that if there is a main camera, it moves with the player.
+        /// </summary>
+        /// <returns>Enumerator of test events.</returns>
+        [UnityTest]
+        public IEnumerator CameraMoveWithPlayer()
+        {
+            // Set input action to move and turn
+            this.Set(this.gamepad.leftStick, Vector2.up);
+            this.Set(this.gamepad.rightStick, Vector2.left);
+
+            // Validate camera starts with player
+            yield return null;
+            ValidateCameraFollowingPlayer();
+
+            // Wait for a delay and validate the camera moves with the player
+            for (int i = 0; i < 5; i++)
+            {
+                yield return new WaitForSeconds(0.5f);
+                ValidateCameraFollowingPlayer();
+            }
         }
     }
 }

@@ -74,7 +74,7 @@ namespace CCDemo
         /// <summary>
         /// Current player attitude.
         /// </summary>
-        private Vector2 attitude = Vector2.zero;
+        public Vector2 attitude { get; set; }
 
         /// <summary>
         /// Current movement state of the player.
@@ -87,6 +87,7 @@ namespace CCDemo
         public void Start()
         {
             playerState = PlayerState.Idle;
+            attitude = Vector3.zero;
 
             if (moveActionReference != null)
             {
@@ -117,6 +118,9 @@ namespace CCDemo
         {
             Vector2 movementInput = moveAction.ReadValue<Vector2>();
             Vector2 lookInput = lookAction.ReadValue<Vector2>();
+
+            // Move camera with player
+            CameraFollow();
 
             // Is the player moving
             bool moving = movementInput.magnitude > 0.001f;
@@ -168,6 +172,18 @@ namespace CCDemo
             Vector2 scaledInput = lookInput * Time.deltaTime * rotationSpeed;
             this.attitude += new Vector2(-scaledInput.y, scaledInput.x);
             transform.rotation = Quaternion.Euler(this.attitude.x, this.attitude.y, 0);
+        }
+
+        /// <summary>
+        /// Move camera to follow main player movement.
+        /// </summary>
+        private void CameraFollow()
+        {
+            if (Camera.main != null)
+            {
+                Camera.main.transform.position = transform.position;
+                Camera.main.transform.rotation = Quaternion.Euler(attitude.x, attitude.y, 0);
+            }
         }
 
         /// <summary>
