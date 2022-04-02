@@ -22,19 +22,44 @@ namespace CCDemo
     using UnityEngine.InputSystem;
 
     /// <summary>
+    /// Player state for state machine, transitions include
+    ///
+    /// Uninitialized -> Idle
+    ///          Idle -> Walking  on press movement key
+    ///       Walking -> Idle     on release movement key
+    /// </summary>
+    public enum PlayerState
+    {
+        Uninitialized,
+        Idle,
+        Walking
+    }
+
+    /// <summary>
     /// Basic character Controls for moving a player around in 3D space.
     /// </summary>
     public class CharacterControls : MonoBehaviour
     {
+        
+        /// <summary>
+        /// Look action reference to modify the player camera.
+        /// </summary>
+        public InputActionReference lookActionReference;
+
+        /// <summary>
+        /// Move action reference to move the player around.
+        /// </summary>
+        public InputActionReference moveActionReference;
+
         /// <summary>
         /// Look action to modify the player camera.
         /// </summary>
-        public InputAction lookAction;
+        public InputAction lookAction { get; set; }
 
         /// <summary>
         /// Move action to move the player around.
         /// </summary>
-        public InputAction moveAction;
+        public InputAction moveAction { get; set; }
 
         /// <summary>
         /// Speed of player movement in units per second.
@@ -47,11 +72,42 @@ namespace CCDemo
         public float rotationSpeed = 180.0f;
 
         /// <summary>
+        /// Current player attitude.
+        /// </summary>
+        private Vector2 attitude = Vector2.zero;
+
+        /// <summary>
+        /// Current movement state of the player.
+        /// </summary>
+        public PlayerState playerState { get; private set; }
+
+        /// <summary>
         /// Setup for character controls.
         /// </summary>
         public void Start()
         {
+            playerState = PlayerState.Idle;
 
+            if (moveActionReference != null)
+            {
+                this.moveAction = moveActionReference.action;
+            }
+            if (lookActionReference != null)
+            {
+                this.lookAction = lookActionReference.action;
+            }
+
+            this.moveAction.Enable();
+            this.lookAction.Enable();
+        }
+
+        /// <summary>
+        /// Set the attitude of the player.
+        /// </summary>
+        /// <param name="attitude">New attitude (pitch, yaw).</param>
+        public void SetAttitude(Vector2 attitude)
+        {
+            this.attitude = attitude;
         }
 
         /// <summary>
@@ -59,7 +115,76 @@ namespace CCDemo
         /// </summary>
         public void Update()
         {
+            Vector2 movementInput = moveAction.ReadValue<Vector2>();
+            Vector2 lookInput = lookAction.ReadValue<Vector2>();
 
+            // Is the player moving
+            bool moving = movementInput.magnitude > 0.001f;
+
+            // Handle state transition if needed.
+            switch (playerState)
+            {
+                case PlayerState.Uninitialized:
+                    // Always transition from Uninitialized to idle
+                    playerState = PlayerState.Idle;
+                    break;
+                case PlayerState.Idle:
+                    // Transition to walking state if player is moving
+                    if (moving)
+                    {
+                        this.playerState = PlayerState.Walking;
+                    }
+                    break;
+                case PlayerState.Walking:
+                    // Transition o idle state if player is not moving
+                    if (!moving)
+                    {
+                        this.playerState = PlayerState.Idle;
+                    }
+                    break;
+            }
+
+            // Update based on current state.
+            switch (this.playerState)
+            {
+                case PlayerState.Idle:
+                    // only rotate camera when idle
+                    RotatePlayer(lookInput);
+                    break;
+                case PlayerState.Walking:
+                    // rotate camera and move player when walking
+                    RotatePlayer(lookInput);
+                    MovePlayer(movementInput);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Rotate the player by a specified input.
+        /// </summary>
+        /// <param name="lookInput">Look input value for the player.</param>
+        public void RotatePlayer(Vector2 lookInput)
+        {
+            Vector2 scaledInput = lookInput * Time.deltaTime * rotationSpeed;
+            this.attitude += new Vector2(-scaledInput.y, scaledInput.x);
+            transform.rotation = Quaternion.Euler(this.attitude.x, this.attitude.y, 0);
+        }
+
+        /// <summary>
+        /// Move input value from the player.
+        /// </summary>
+        /// <param name="movementInput">Movement input value for the player.</param>
+        public void MovePlayer(Vector2 movementInput)
+        {
+            // Scale movement vector to have max length of 1
+            movementInput = movementInput.magnitude > 1 ? movementInput.normalized : movementInput;
+
+            // Compute rotated player movement
+            Vector3 rotatedMovement = transform.rotation * new Vector3(movementInput.x, 0, movementInput.y);
+
+            // Scale movement based on speed
+            Vector3 movement = rotatedMovement * Time.deltaTime * playerSpeed;
+            transform.position += movement;
         }
     }
 }

@@ -40,6 +40,18 @@ namespace CCDemo.Tests
         private Gamepad gamepad;
 
         /// <summary>
+        /// Are two vectors close enough for a given distance.
+        /// </summary>
+        /// <param name="a">Vector one.</param>
+        /// <param name="b">Vector two.</param>
+        /// <param name="dist">Minimum distance to measure for.</param>
+        /// <returns>True if the distance between a and b are within a specific distance.</returns>
+        public bool WithinBounds(Vector3 a, Vector3 b, float dist)
+        {
+            return (a - b).magnitude <= dist;
+        }
+
+        /// <summary>
         /// Setup code run before each test.
         /// </summary>
         [SetUp]
@@ -89,10 +101,9 @@ namespace CCDemo.Tests
             // Assert that the player has moved forward
             Vector3 end = this.character.transform.position;
             Vector3 movement = end - start;
-            float delta = (expected - movement).magnitude;
 
             Assert.IsTrue(
-                Mathf.Approximately(delta, 0),
+                WithinBounds(movement, expected, 0.1f),
                 $"Expected player to move {expected.ToString("F3")}, but instead found {movement.ToString("F3")}");
 
             yield return null;
@@ -149,10 +160,9 @@ namespace CCDemo.Tests
             // Assert that the player has moved forward
             Quaternion end = this.character.transform.rotation;
             Quaternion expected = start * Quaternion.Euler(0, time * this.character.rotationSpeed, 0);
-            float delta = Quaternion.Angle(end, expected);
 
             Assert.IsTrue(
-                Mathf.Approximately(delta, 0),
+                WithinBounds(end.eulerAngles, expected.eulerAngles, 10.0f),
                 $"Expected player to be at {expected.eulerAngles.ToString("F3")}, but instead found {end.eulerAngles.ToString("F3")}");
 
             yield return null;
@@ -166,7 +176,8 @@ namespace CCDemo.Tests
         public IEnumerator CharacterControlsMoveInDirection()
         {
             // Set the player facing to the right and move forward
-            this.character.transform.rotation = Quaternion.LookRotation(Vector3.left, Vector3.up);
+            Quaternion attitude = Quaternion.LookRotation(Vector3.left, Vector3.up);
+            this.character.SetAttitude(new Vector2(attitude.eulerAngles.x, attitude.eulerAngles.y));
             float time = 1.0f;
             this.Set(this.gamepad.leftStick, Vector2.up);
             yield return this.ValidateMovement(time, Vector3.left * time * this.character.playerSpeed);
