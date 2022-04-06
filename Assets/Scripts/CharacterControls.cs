@@ -40,6 +40,15 @@ namespace CCDemo
     /// </summary>
     public class CharacterControls : MonoBehaviour
     {
+        /// <summary>
+        /// Maximum pitch of player camera rotation.
+        /// </summary>
+        public const float MaxPitch = 90.0f;
+
+        /// <summary>
+        /// Minimum pitch of player camera rotation.
+        /// </summary>
+        public const float MinPitch = -90.0f;
 
         /// <summary>
         /// Look action reference to modify the player camera.
@@ -184,6 +193,10 @@ namespace CCDemo
         {
             Vector2 scaledInput = lookInput * Time.deltaTime * this.rotationSpeed;
             this.attitude += new Vector2(-scaledInput.y, scaledInput.x);
+
+            // Bound pitch between min and max value
+            this.attitude = new Vector2(Mathf.Min(Mathf.Max(this.attitude.x, MinPitch), MaxPitch), this.attitude.y);
+
             this.transform.rotation = Quaternion.Euler(this.attitude.x, this.attitude.y, 0);
         }
 
@@ -209,7 +222,7 @@ namespace CCDemo
             movementInput = movementInput.magnitude > 1 ? movementInput.normalized : movementInput;
 
             // Compute rotated player movement
-            Vector3 rotatedMovement = this.transform.rotation * new Vector3(movementInput.x, 0, movementInput.y);
+            Vector3 rotatedMovement = Quaternion.Euler(0, this.Yaw, 0) * new Vector3(movementInput.x, 0, movementInput.y);
 
             // Scale movement based on speed
             Vector3 movement = rotatedMovement * Time.deltaTime * this.playerSpeed;

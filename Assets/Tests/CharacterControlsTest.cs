@@ -313,7 +313,7 @@ namespace CCDemo.Tests
                 yield return new WaitForSeconds(delay);
 
                 Assert.IsTrue(
-                    -90 <= character.Pitch && character.Pitch <= 90,
+                    CharacterControls.MinPitch <= character.Pitch && character.Pitch <= CharacterControls.MaxPitch,
                     $"Expected pitch to be between 0 and 90, but instead found {character.Pitch}");
             }
 
@@ -326,7 +326,7 @@ namespace CCDemo.Tests
                 yield return new WaitForSeconds(delay);
 
                 Assert.IsTrue(
-                    -90 <= character.Pitch && character.Pitch <= 90,
+                    CharacterControls.MinPitch <= character.Pitch && character.Pitch <= CharacterControls.MaxPitch,
                     $"Expected pitch to be between 0 and 90, but instead found {character.Pitch}");
             }
         }
