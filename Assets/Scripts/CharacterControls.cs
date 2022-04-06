@@ -77,6 +77,16 @@ namespace CCDemo
         public Vector2 attitude { get; set; }
 
         /// <summary>
+        /// Get the pitch of the player's current view.
+        /// </summary>
+        public float Pitch => attitude.x;
+
+        /// <summary>
+        /// Get the yaw of the player's current view.
+        /// </summary>
+        public float Yaw => attitude.y;
+
+        /// <summary>
         /// Current movement state of the player.
         /// </summary>
         public PlayerState playerState { get; private set; }
