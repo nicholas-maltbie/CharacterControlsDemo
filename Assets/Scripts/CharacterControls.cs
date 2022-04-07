@@ -57,7 +57,7 @@ namespace CCDemo
         /// Small epsilon value for avoiding overlapping with objects.
         /// </summary>
         public const float Epsilon = 0.001f;
-        
+
         /// <summary>
         /// Maximum angle between two colliding objects.
         /// </summary>
@@ -119,12 +119,12 @@ namespace CCDemo
         /// <summary>
         /// Get the pitch of the player's current view.
         /// </summary>
-        public float Pitch => attitude.x;
+        public float Pitch => this.attitude.x;
 
         /// <summary>
         /// Get the yaw of the player's current view.
         /// </summary>
-        public float Yaw => attitude.y;
+        public float Yaw => this.attitude.y;
 
         /// <summary>
         /// Current movement state of the player.
@@ -152,7 +152,7 @@ namespace CCDemo
             this.moveAction.Enable();
             this.lookAction.Enable();
 
-            this.capsuleCollider = GetComponent<CapsuleCollider>();
+            this.capsuleCollider = this.GetComponent<CapsuleCollider>();
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace CCDemo
                 case PlayerState.Walking:
                     // rotate camera and move player when walking
                     this.RotatePlayer(lookInput);
-                    this.MovePlayer(GetPlayerMovement(movementInput));
+                    this.MovePlayer(this.GetPlayerMovement(movementInput));
                     break;
             }
         }
@@ -270,9 +270,9 @@ namespace CCDemo
         public bool CastSelf(Vector3 pos, Quaternion rot, Vector3 dir, float dist, out RaycastHit hit)
         {
             // Get Parameters associated with the KCC
-            Vector3 center = rot * capsuleCollider.center + pos;
-            float radius = capsuleCollider.radius;
-            float height = capsuleCollider.height;
+            Vector3 center = rot * this.capsuleCollider.center + pos;
+            float radius = this.capsuleCollider.radius;
+            float height = this.capsuleCollider.height;
 
             // Get top and bottom points of collider
             Vector3 bottom = center + rot * Vector3.down * (height / 2 - radius);
@@ -281,7 +281,7 @@ namespace CCDemo
             // Check what objects this collider will hit when cast with this configuration excluding itself
             IEnumerable<RaycastHit> hits = Physics.CapsuleCastAll(
                 top, bottom, radius, dir, dist, ~0, QueryTriggerInteraction.Ignore)
-                .Where(hit => hit.collider.transform != transform);
+                .Where(hit => hit.collider.transform != this.transform);
             bool didHit = hits.Count() > 0;
 
             // Find the closest objects hit
@@ -301,19 +301,19 @@ namespace CCDemo
         /// <param name="movementInput">Movement input value for the player.</param>
         public void MovePlayer(Vector3 movement)
         {
-            Vector3 position = transform.position;
-            Quaternion rotation = transform.rotation;
+            Vector3 position = this.transform.position;
+            Quaternion rotation = this.transform.rotation;
 
             Vector3 remaining = movement;
 
             int bounces = 0;
 
-            while (bounces < maxBounces && remaining.magnitude > Epsilon)
+            while (bounces < this.maxBounces && remaining.magnitude > Epsilon)
             {
                 // Do a cast of the collider to see if an object is hit during this
                 // movement bounce
                 float distance = remaining.magnitude;
-                if (!CastSelf(position, rotation, remaining.normalized, distance, out RaycastHit hit))
+                if (!this.CastSelf(position, rotation, remaining.normalized, distance, out RaycastHit hit))
                 {
                     // If there is no hit, move to desired position
                     position += remaining;
@@ -349,7 +349,7 @@ namespace CCDemo
                 float normalizedAngle = angleBetween / MaxAngleShoveRadians;
 
                 // Reduce the remaining movement by the remaining movement that ocurred
-                remaining *= Mathf.Pow(1 - normalizedAngle, anglePower) * 0.9f + 0.1f;
+                remaining *= Mathf.Pow(1 - normalizedAngle, this.anglePower) * 0.9f + 0.1f;
 
                 // Rotate the remaining movement to be projected along the plane 
                 // of the surface hit (emulate pushing against the object)
@@ -371,7 +371,7 @@ namespace CCDemo
             }
 
             // We're done, player was moved as part of loop
-            transform.position = position;
+            this.transform.position = position;
         }
     }
 }
