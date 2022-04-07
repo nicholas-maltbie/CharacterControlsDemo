@@ -90,6 +90,7 @@ namespace CCDemo.Tests
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             this.character = go.AddComponent<CharacterControls>();
             _ = go.AddComponent<PlayerInput>();
+            go.name = "character";
 
             // Setup gamepad, needs to be done in SetUp method
             this.gamepad = InputSystem.AddDevice<Gamepad>();
@@ -177,7 +178,7 @@ namespace CCDemo.Tests
             Vector3 expectedPosition = this.character.transform.position;
             Vector3 actualPosition = Camera.main.gameObject.transform.position;
             Assert.IsTrue(
-                this.WithinBounds(expectedPosition, actualPosition, 0.1f),
+                this.WithinBounds(expectedPosition, actualPosition, 0.25f),
                 $"Expected camera position to be {expectedPosition.ToString("F3")}, but instead found {actualPosition.ToString("F3")}");
 
             var expectedRotation = Quaternion.Euler(this.character.attitude.x, this.character.attitude.y, 0);
@@ -363,7 +364,7 @@ namespace CCDemo.Tests
         {
             // Create a wall in front of the player
             var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            wall.transform.position = Vector3.forward;
+            wall.transform.position = new Vector3(0, 0, 3);
             yield return new WaitForFixedUpdate();
 
             // Move the player forward as though they would collide with the wall
@@ -379,6 +380,9 @@ namespace CCDemo.Tests
                     !playerCollider.bounds.Intersects(wallCollider.bounds),
                     $"Expected wall and player collider to not overlap but instead found intersection between bounds.");
             }
+
+            Object.Destroy(wall);
+            yield return null;
         }
 
         /// <summary>
@@ -391,7 +395,7 @@ namespace CCDemo.Tests
             // Create a rotated obstacle in front of the player
             Vector3 start = this.character.transform.position;
             var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            wall.transform.position = new Vector3(-0.5f, 0, 1);
+            wall.transform.position = new Vector3(-0.5f, 0, 2);
             wall.transform.rotation = Quaternion.Euler(0, 45, 0);
             yield return new WaitForFixedUpdate();
 
@@ -405,6 +409,9 @@ namespace CCDemo.Tests
             // Assert that the player has moved forward and been pushed some to the right (positive x direction).
             Assert.IsTrue(delta.x >= 0.5f, $"Expected character to move to right by at least 0.5 units, instead found {delta.x}");
             Assert.IsTrue(delta.z >= 3f, $"Expected character to move to forward by at least 3 units, instead found {delta.z}");
+
+            Object.Destroy(wall);
+            yield return null;
         }
     }
 }
