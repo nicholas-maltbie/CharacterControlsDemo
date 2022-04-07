@@ -18,7 +18,6 @@
 
 namespace CCDemo.Tests
 {
-    using System;
     using System.Collections;
     using NUnit.Framework;
     using UnityEngine;
@@ -96,8 +95,8 @@ namespace CCDemo.Tests
             this.gamepad = InputSystem.AddDevice<Gamepad>();
 
             // setup basic inputs in test
-            this.character.moveAction = new InputAction(type: InputActionType.PassThrough, binding: MoveInput.path);
-            this.character.lookAction = new InputAction(type: InputActionType.PassThrough, binding: LookInput.path);
+            this.character.moveAction = new InputAction(type: InputActionType.PassThrough, binding: this.MoveInput.path);
+            this.character.lookAction = new InputAction(type: InputActionType.PassThrough, binding: this.LookInput.path);
 
             this.character.moveAction.Enable();
             this.character.lookAction.Enable();
@@ -197,7 +196,7 @@ namespace CCDemo.Tests
         {
             // Set input action to move forward
             float time = 1.0f;
-            this.Set(MoveInput, Vector2.up);
+            this.Set(this.MoveInput, Vector2.up);
             yield return this.ValidateMovement(time, Vector3.forward * time * this.character.playerSpeed);
         }
 
@@ -211,11 +210,11 @@ namespace CCDemo.Tests
             float time = 1.0f;
 
             // Set input action to move forward
-            this.Set(MoveInput, Vector2.up);
+            this.Set(this.MoveInput, Vector2.up);
             yield return this.ValidateMovement(time, Vector3.forward * time * this.character.playerSpeed);
 
             // Set input action to not move
-            this.Set(MoveInput, Vector2.zero);
+            this.Set(this.MoveInput, Vector2.zero);
             yield return this.ValidateMovement(time, Vector3.zero);
         }
 
@@ -228,7 +227,7 @@ namespace CCDemo.Tests
         {
             float time = 1.0f;
             // Set input action to look to the left
-            this.Set(LookInput, Vector2.left);
+            this.Set(this.LookInput, Vector2.left);
             yield return this.ValidateRotation(time, new Vector3(0, 180, 0));
             yield return null;
         }
@@ -244,7 +243,7 @@ namespace CCDemo.Tests
             var attitude = Quaternion.LookRotation(Vector3.left, Vector3.up);
             this.character.SetAttitude(new Vector2(attitude.eulerAngles.x, attitude.eulerAngles.y));
             float time = 1.0f;
-            this.Set(MoveInput, Vector2.up);
+            this.Set(this.MoveInput, Vector2.up);
             yield return this.ValidateMovement(time, Vector3.left * time * this.character.playerSpeed);
         }
 
@@ -258,17 +257,17 @@ namespace CCDemo.Tests
             float time = 1.0f;
 
             // Set input action to move forward
-            this.Set(MoveInput, Vector2.up);
+            this.Set(this.MoveInput, Vector2.up);
             yield return this.ValidateMovement(time, Vector3.forward * time * this.character.playerSpeed);
 
             // Set input action to not move and turn
-            this.Set(MoveInput, Vector2.zero);
-            this.Set(LookInput, Vector2.left);
+            this.Set(this.MoveInput, Vector2.zero);
+            this.Set(this.LookInput, Vector2.left);
             yield return this.ValidateRotation(time, new Vector3(0, 180, 0));
 
             // Move again but should be moving backward now
-            this.Set(MoveInput, Vector2.up);
-            this.Set(LookInput, Vector2.zero);
+            this.Set(this.MoveInput, Vector2.up);
+            this.Set(this.LookInput, Vector2.zero);
             yield return this.ValidateMovement(time, Vector3.back * time * this.character.playerSpeed, error: 1.0f);
         }
 
@@ -280,8 +279,8 @@ namespace CCDemo.Tests
         public IEnumerator CameraMoveWithPlayer()
         {
             // Set input action to move and turn
-            this.Set(MoveInput, Vector2.up);
-            this.Set(LookInput, Vector2.left);
+            this.Set(this.MoveInput, Vector2.up);
+            this.Set(this.LookInput, Vector2.left);
 
             // Validate camera starts with player
             yield return null;
@@ -305,7 +304,7 @@ namespace CCDemo.Tests
             float delay = 0.1f;
 
             // Set input action to rotate camera up
-            this.Set(LookInput, Vector2.up);
+            this.Set(this.LookInput, Vector2.up);
 
             // Have the player rotate up, but assert that they never pass 90 degree pitch
             for (int i = 0; i < 360 / this.character.rotationSpeed / delay; i++)
@@ -313,12 +312,12 @@ namespace CCDemo.Tests
                 yield return new WaitForSeconds(delay);
 
                 Assert.IsTrue(
-                    CharacterControls.MinPitch <= character.Pitch && character.Pitch <= CharacterControls.MaxPitch,
-                    $"Expected pitch to be between 0 and 90, but instead found {character.Pitch}");
+                    CharacterControls.MinPitch <= this.character.Pitch && this.character.Pitch <= CharacterControls.MaxPitch,
+                    $"Expected pitch to be between 0 and 90, but instead found {this.character.Pitch}");
             }
 
             // Set input action to rotate camera down
-            this.Set(LookInput, Vector2.down);
+            this.Set(this.LookInput, Vector2.down);
 
             // Have the player rotate up, but assert that they never pass 90 degree pitch
             for (int i = 0; i < 360 / this.character.rotationSpeed / delay; i++)
@@ -326,8 +325,8 @@ namespace CCDemo.Tests
                 yield return new WaitForSeconds(delay);
 
                 Assert.IsTrue(
-                    CharacterControls.MinPitch <= character.Pitch && character.Pitch <= CharacterControls.MaxPitch,
-                    $"Expected pitch to be between 0 and 90, but instead found {character.Pitch}");
+                    CharacterControls.MinPitch <= this.character.Pitch && this.character.Pitch <= CharacterControls.MaxPitch,
+                    $"Expected pitch to be between 0 and 90, but instead found {this.character.Pitch}");
             }
         }
 
@@ -339,20 +338,73 @@ namespace CCDemo.Tests
         public IEnumerator OnlyMoveOnHorizontalPlane()
         {
             // Set input action to move and turn
-            this.Set(MoveInput, Vector2.up + Vector2.left);
-            this.Set(LookInput, Vector2.up + Vector2.left);
+            this.Set(this.MoveInput, Vector2.up + Vector2.left);
+            this.Set(this.LookInput, Vector2.up + Vector2.left);
 
             yield return null;
-            float startingY = character.transform.position.y;
+            float startingY = this.character.transform.position.y;
 
             // Wait for a delay and validate the player does not move along the vertical plane
             for (int i = 0; i < 10; i++)
             {
                 yield return new WaitForSeconds(0.1f);
                 Assert.IsTrue(
-                    Mathf.Abs(character.transform.position.y - startingY) < 0.1f,
-                    $"Expected player to not move along horizontal plane, had starting y of {startingY} and found y of {character.transform.position.y}");
+                    Mathf.Abs(this.character.transform.position.y - startingY) < 0.1f,
+                    $"Expected player to not move along horizontal plane, had starting y of {startingY} and found y of {this.character.transform.position.y}");
             }
+        }
+
+        /// <summary>
+        /// Create a wall in front of the player, when te player would walk into that wall, ensure they do not overlap with that object.
+        /// </summary>
+        /// <returns>Enumerator of test events.</returns>
+        [UnityTest]
+        public IEnumerator DoNotMoveThroughWalls()
+        {
+            // Create a wall in front of the player
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = Vector3.forward;
+            yield return new WaitForFixedUpdate();
+
+            // Move the player forward as though they would collide with the wall
+            this.Set(this.MoveInput, Vector2.up);
+            CapsuleCollider playerCollider = this.character.GetComponent<CapsuleCollider>();
+            Collider wallCollider = wall.GetComponent<Collider>();
+
+            // Wait for a delay and validate the player does not collide with the wall
+            for (int i = 0; i < 10; i++)
+            {
+                yield return new WaitForSeconds(0.1f);
+                Assert.IsTrue(
+                    !playerCollider.bounds.Intersects(wallCollider.bounds),
+                    $"Expected wall and player collider to not overlap but instead found intersection between bounds.");
+            }
+        }
+
+        /// <summary>
+        /// When a player walks along walls, ensure that they slide along the wall at the angle the wall is placed at.
+        /// </summary>
+        /// <returns>Enumerator of test events.</returns>
+        [UnityTest]
+        public IEnumerator SlideAlongWalls()
+        {
+            // Create a rotated obstacle in front of the player
+            Vector3 start = this.character.transform.position;
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.transform.position = new Vector3(-0.5f, 0, 1);
+            wall.transform.rotation = Quaternion.Euler(0, 45, 0);
+            yield return new WaitForFixedUpdate();
+
+            // Move the player forward as though they hit the object
+            this.Set(this.MoveInput, Vector2.up);
+
+            yield return new WaitForSeconds(1f);
+
+            Vector3 delta = this.character.transform.position - start;
+
+            // Assert that the player has moved forward and been pushed some to the right (positive x direction).
+            Assert.IsTrue(delta.x >= 0.5f, $"Expected character to move to right by at least 0.5 units, instead found {delta.x}");
+            Assert.IsTrue(delta.z >= 3f, $"Expected character to move to forward by at least 3 units, instead found {delta.z}");
         }
     }
 }
