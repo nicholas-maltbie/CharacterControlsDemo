@@ -25,29 +25,9 @@ set -o pipefail
 # Folder with githooks files
 GIT_HOOKS_DIR="./.githooks"
 
-# keep track of the last executed command
-trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-# echo an error message before exiting
-trap 'echo "\"${last_command}\" command filed with exit code $?."' ERR
 
-# Build edit string, by replacing newlines with semicolons.
-# --diff-filter=d only filters files that are not deleted, which means we won't have trouble adding them afterwards
-
-EXCLUDE_STRING=""
-
-# If the include string is empty, we're done. This happens e.g. if the commit only consists of deleted files.
-if [[ -z "$INCLUDE_STRING" ]]
-then
-    echo "No files to change"
-else
-    # Edit your project files here
-    echo "Formatting files..."
-    dotnet tool restore # This handles cache. If there's no restore needed it will not download anything.
-    dotnet format --severity warn --verbosity normal CharacterControlsDemo.sln --exclude "$EXCLUDE_STRING" --check
-    dotnet format whitespace --verbosity normal CharacterControlsDemo.sln --exclude "$EXCLUDE_STRING" --check
-    # Restage files
-    echo "Restaging files: $INCLUDE_STRING"
-    echo ${INCLUDE_STRING} | xargs -t -l git add
-fi
+dotnet tool restore # This handles cache. If there's no restore needed it will not download anything.
+dotnet format --severity warn --verbosity normal CharacterControlsDemo.sln --verify-no-changes
+dotnet format whitespace --verbosity normal CharacterControlsDemo.sln --verify-no-changes
 
 echo "pre-commit hook finished"

@@ -248,7 +248,7 @@ namespace CCDemo.Tests
             float time = 1.0f;
             // Set input action to look to the left
             this.Set(this.LookInput, Vector2.left);
-            yield return this.ValidateRotation(time, new Vector3(0, time * character.rotationSpeed, 0));
+            yield return this.ValidateRotation(time, new Vector3(0, time * this.character.rotationSpeed, 0));
             yield return null;
         }
 
@@ -442,46 +442,46 @@ namespace CCDemo.Tests
         {
             // Assert player state in idle state
             this.Set(this.MoveInput, Vector2.zero);
-            Assert.IsTrue(character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {character.playerState}");
+            Assert.IsTrue(this.character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {this.character.playerState}");
 
             // When the player presses forward, we should transition to walking state
             this.Set(this.MoveInput, Vector2.up);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {character.playerState}");
+            Assert.IsTrue(this.character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {this.character.playerState}");
 
             // When the player releases forward, we should transition back to idle
             this.Set(this.MoveInput, Vector2.zero);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {character.playerState}");
+            Assert.IsTrue(this.character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {this.character.playerState}");
 
             // Remove floor from below player while idle, should transition to falling
-            GameObject.DestroyImmediate(floor);
+            GameObject.DestroyImmediate(this.floor);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Falling, $"Expected player state to be {PlayerState.Falling} but instead found {character.playerState}");
+            Assert.IsTrue(this.character.playerState == PlayerState.Falling, $"Expected player state to be {PlayerState.Falling} but instead found {this.character.playerState}");
 
             // Add floor below player while idle, should transition to idle
-            floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            this.floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             this.floor.transform.position = this.character.GetComponent<Collider>().bounds.min + Vector3.down * CharacterControls.Epsilon;
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {character.playerState}");
+            Assert.IsTrue(this.character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {this.character.playerState}");
 
             // When the player presses forward, we should transition to walking state
             this.Set(this.MoveInput, Vector2.up);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {character.playerState}");
+            Assert.IsTrue(this.character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {this.character.playerState}");
 
             // Remove floor from below player while walking, should transition to Falling
-            GameObject.DestroyImmediate(floor);
+            GameObject.DestroyImmediate(this.floor);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Falling, $"Expected player state to be {PlayerState.Falling} but instead found {character.playerState}");
+            Assert.IsTrue(this.character.playerState == PlayerState.Falling, $"Expected player state to be {PlayerState.Falling} but instead found {this.character.playerState}");
 
             // Add floor below player while falling and pressing forward, should transition to Walking
-            floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            this.floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             this.floor.transform.position = this.character.GetComponent<Collider>().bounds.min + Vector3.down * CharacterControls.Epsilon;
             this.Set(this.MoveInput, Vector2.up);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {character.playerState}");
-            GameObject.DestroyImmediate(floor);
+            Assert.IsTrue(this.character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {this.character.playerState}");
+            GameObject.DestroyImmediate(this.floor);
         }
 
         /// <summary>
@@ -492,29 +492,29 @@ namespace CCDemo.Tests
         public IEnumerator TestPlayerFalling()
         {
             // Put a floor below the player and move the player above the floor
-            floor.transform.position = Vector3.zero;
-            character.transform.position = Vector3.up * 5;
+            this.floor.transform.position = Vector3.zero;
+            this.character.transform.position = Vector3.up * 5;
 
             yield return null;
 
             // Assert that the player will fall down until they hit the floor.
-            for (int i = 0; i < 10 && !character.OnGround; i++)
+            for (int i = 0; i < 10 && !this.character.OnGround; i++)
             {
-                Vector3 start = character.transform.position;
+                Vector3 start = this.character.transform.position;
                 yield return new WaitForSeconds(0.25f);
-                Vector3 delta = character.transform.position - start;
+                Vector3 delta = this.character.transform.position - start;
 
                 // Assert that player is moving down
                 Assert.IsTrue(delta.y <= CharacterControls.Epsilon, $"Expected player to be moving down but instead found motion {delta.y}");
             }
 
             // Assert that player has hit the ground
-            Assert.IsTrue(character.OnGround, $"Expected player to be on ground but instead found state OnGround:{character.OnGround}");
+            Assert.IsTrue(this.character.OnGround, $"Expected player to be on ground but instead found state OnGround:{this.character.OnGround}");
 
             // While player is grounded, they should not move
             this.ValidateMovement(1.0f, Vector3.zero);
 
-            GameObject.DestroyImmediate(floor);
+            GameObject.DestroyImmediate(this.floor);
         }
 
         /// <summary>
@@ -525,20 +525,20 @@ namespace CCDemo.Tests
         public IEnumerator MoveWhileFalling()
         {
             // Don't put a floor below the player.
-            GameObject.DestroyImmediate(floor);
-            floor = null;
+            GameObject.DestroyImmediate(this.floor);
+            this.floor = null;
 
             // Set move input to forward
-            Set(MoveInput, Vector2.up);
+            this.Set(this.MoveInput, Vector2.up);
 
             yield return null;
 
             // Assert that the player is moving both down and forward
-            for (int i = 0; i < 10 && !character.OnGround; i++)
+            for (int i = 0; i < 10 && !this.character.OnGround; i++)
             {
-                Vector3 start = character.transform.position;
+                Vector3 start = this.character.transform.position;
                 yield return new WaitForSeconds(0.25f);
-                Vector3 delta = character.transform.position - start;
+                Vector3 delta = this.character.transform.position - start;
 
                 // Assert that player is moving down
                 Assert.IsTrue(delta.y <= 0, $"Expected player to be moving down but instead found motion {delta.y}");

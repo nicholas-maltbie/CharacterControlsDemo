@@ -189,7 +189,7 @@ namespace CCDemo
             Vector2 lookInput = this.lookAction.ReadValue<Vector2>();
 
             // Update grounded state
-            OnGround = CastSelf(transform.position, transform.rotation, Vector3.down, 0.01f, out RaycastHit ground);
+            this.OnGround = this.CastSelf(this.transform.position, this.transform.rotation, Vector3.down, 0.01f, out _);
 
             // Is the player moving
             bool moving = movementInput.magnitude > 0.001f;
@@ -203,7 +203,7 @@ namespace CCDemo
                     break;
                 case PlayerState.Idle:
                     // Transition to falling if not on ground.
-                    if (!OnGround)
+                    if (!this.OnGround)
                     {
                         this.playerState = PlayerState.Falling;
                     }
@@ -216,7 +216,7 @@ namespace CCDemo
                     break;
                 case PlayerState.Walking:
                     // Transition to falling if not on ground.
-                    if (!OnGround)
+                    if (!this.OnGround)
                     {
                         this.playerState = PlayerState.Falling;
                     }
@@ -229,15 +229,16 @@ namespace CCDemo
                     break;
                 case PlayerState.Falling:
                     // Transition to idle state if player is not moving and grounded
-                    if (!moving && OnGround)
+                    if (!moving && this.OnGround)
                     {
                         this.playerState = PlayerState.Idle;
                     }
                     // Transition to walking state if player is moving and grounded
-                    else if (moving && OnGround)
+                    else if (moving && this.OnGround)
                     {
                         this.playerState = PlayerState.Walking;
                     }
+
                     break;
             }
 
@@ -259,7 +260,7 @@ namespace CCDemo
                     this.MovePlayer(this.GetPlayerMovement(movementInput));
 
                     // As well as fall down
-                    this.MovePlayer(Vector3.down * fallSpeed * Time.deltaTime);
+                    this.MovePlayer(Vector3.down * this.fallSpeed * Time.deltaTime);
                     break;
             }
 
