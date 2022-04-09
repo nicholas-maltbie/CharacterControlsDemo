@@ -28,13 +28,18 @@ namespace CCDemo
     ///
     /// Uninitialized -> Idle
     ///          Idle -> Walking  on press movement key
+    ///          Idle -> Falling  on leave ground
     ///       Walking -> Idle     on release movement key
+    ///       Walking -> Falling  on leave ground
+    ///       Falling -> Idle     on grounded and not pressing movement key
+    ///       Falling -> Walking  on grounded and pressing movement key
     /// </summary>
     public enum PlayerState
     {
         Uninitialized,
         Idle,
-        Walking
+        Walking,
+        Falling
     }
 
     /// <summary>
@@ -114,7 +119,13 @@ namespace CCDemo
         /// <summary>
         /// Current player attitude.
         /// </summary>
-        public Vector2 attitude { get; set; }
+        public Vector2 attitude { get; private set; }
+
+        /// <summary>
+        /// Current grounded state of the player.
+        /// </summary>
+        /// <value></value>
+        public bool OnGround { get; private set; }
 
         /// <summary>
         /// Get the pitch of the player's current view.

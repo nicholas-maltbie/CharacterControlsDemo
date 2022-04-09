@@ -417,13 +417,15 @@ namespace CCDemo.Tests
         /// <summary>
         /// Test state transitions for the player..
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Enumerator of test events.</returns>
         [UnityTest]
         public IEnumerator TestStateTransitions()
         {
             // Assert player state in idle state
             this.Set(this.MoveInput, Vector2.zero);
             Assert.IsTrue(character.playerState == PlayerState.Idle);
+            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            floor.transform.position = character.GetComponent<Collider>().bounds.min;
 
             // When the player presses forward, we should transition to walking state
             this.Set(this.MoveInput, Vector2.up);
@@ -434,6 +436,96 @@ namespace CCDemo.Tests
             this.Set(this.MoveInput, Vector2.zero);
             yield return null;
             Assert.IsTrue(character.playerState == PlayerState.Idle);
+
+            // Remove floor from below player while idle, should transition to falling
+            yield return null;
+            GameObject.DestroyImmediate(floor);
+            Assert.IsTrue(character.playerState == PlayerState.Falling);
+
+            // Add floor below player while idle, should transition to idle
+            yield return null;
+            floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            Assert.IsTrue(character.playerState == PlayerState.Idle);
+
+            // When the player presses forward, we should transition to walking state
+            this.Set(this.MoveInput, Vector2.up);
+            yield return null;
+            Assert.IsTrue(character.playerState == PlayerState.Walking);
+
+            // Remove floor from below player while walking, should transition to Falling
+            yield return null;
+            GameObject.DestroyImmediate(floor);
+            Assert.IsTrue(character.playerState == PlayerState.Falling);
+
+            // Add floor below player while falling and pressing forward, should transition to Walking
+            yield return null;
+            Assert.IsTrue(character.playerState == PlayerState.Falling);
+            GameObject.DestroyImmediate(floor);
+        }
+
+        /// <summary>
+        /// Verify that the player will start falling down when they walk off the floor.
+        /// </summary>
+        /// <returns>Enumerator of test events.</returns>
+        [UnityTest]
+        public IEnumerator TestPlayerFalling()
+        {
+            // Put a floor below the player and move the player above the floor
+            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            floor.transform.position = Vector3.zero;
+            character.transform.position = Vector3.up * 5;
+
+            yield return null;
+
+            // Assert that the player will fall down until they hit the floor.
+            for (int i = 0; i < 10 && !character.OnGround; i++)
+            {
+                Vector3 start = character.transform.position;
+                yield return new WaitForSeconds(0.25f);
+                Vector3 delta = character.transform.position - start;
+
+                // Assert that player is moving down
+                Assert.IsTrue(delta.y <= CharacterControls.Epsilon, $"Expected player to be moving down but instead found motion {delta.y}");
+
+                if (delta.y <= CharacterControls.Epsilon)
+                {
+                    Assert.IsTrue(character.playerState == PlayerState.Falling, $"Expected player to be in state {PlayerState.Falling} but instead found {character.playerState}");
+                }
+            }
+
+            // Assert that player has hit the ground
+            Assert.IsTrue(character.OnGround, $"Expected player to be on ground but instead found state OnGround:{character.OnGround}");
+
+            // While player is grounded, they should not move
+            this.ValidateMovement(1.0f, Vector3.zero);
+
+            GameObject.DestroyImmediate(floor);
+        }
+
+        /// <summary>
+        /// Verify that the player can move while falling.
+        /// </summary>
+        /// <returns>Enumerator of test events.</returns>
+        [UnityTest]
+        public IEnumerator MoveWhileFalling()
+        {
+            // Don't put a floor below the player.
+            // Set move input to forward
+            Set(MoveInput, Vector2.up);
+
+            yield return null;
+
+            // Assert that the player is moving both down and forward
+            for (int i = 0; i < 10 && !character.OnGround; i++)
+            {
+                Vector3 start = character.transform.position;
+                yield return new WaitForSeconds(0.25f);
+                Vector3 delta = character.transform.position - start;
+
+                // Assert that player is moving down
+                Assert.IsTrue(delta.y <= 0, $"Expected player to be moving down but instead found motion {delta.y}");
+                Assert.IsTrue(delta.z >= 0, $"Expected player to be moving forward instead found motion {delta.z}");
+            }
         }
     }
 }
