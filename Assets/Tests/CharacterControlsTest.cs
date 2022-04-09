@@ -229,7 +229,7 @@ namespace CCDemo.Tests
             float time = 1.0f;
             // Set input action to look to the left
             this.Set(this.LookInput, Vector2.left);
-            yield return this.ValidateRotation(time, new Vector3(0, 180, 0));
+            yield return this.ValidateRotation(time, new Vector3(0, time * character.rotationSpeed, 0));
             yield return null;
         }
 
@@ -412,6 +412,28 @@ namespace CCDemo.Tests
 
             Object.Destroy(wall);
             yield return null;
+        }
+
+        /// <summary>
+        /// Test state transitions for the player..
+        /// </summary>
+        /// <returns></returns>
+        [UnityTest]
+        public IEnumerator TestStateTransitions()
+        {
+            // Assert player state in idle state
+            this.Set(this.MoveInput, Vector2.zero);
+            Assert.IsTrue(character.playerState == PlayerState.Idle);
+
+            // When the player presses forward, we should transition to walking state
+            this.Set(this.MoveInput, Vector2.up);
+            yield return null;
+            Assert.IsTrue(character.playerState == PlayerState.Walking);
+
+            // When the player releases forward, we should transition back to idle
+            this.Set(this.MoveInput, Vector2.zero);
+            yield return null;
+            Assert.IsTrue(character.playerState == PlayerState.Idle);
         }
     }
 }

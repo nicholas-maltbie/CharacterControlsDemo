@@ -172,9 +172,6 @@ namespace CCDemo
             Vector2 movementInput = this.moveAction.ReadValue<Vector2>();
             Vector2 lookInput = this.lookAction.ReadValue<Vector2>();
 
-            // Move camera with player
-            this.CameraFollow();
-
             // Is the player moving
             bool moving = movementInput.magnitude > 0.001f;
 
@@ -216,6 +213,9 @@ namespace CCDemo
                     this.MovePlayer(this.GetPlayerMovement(movementInput));
                     break;
             }
+
+            // Move camera with player
+            this.CameraFollow();
         }
 
         /// <summary>
