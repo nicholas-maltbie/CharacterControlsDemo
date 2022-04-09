@@ -36,7 +36,12 @@ namespace CCDemo.Tests
         private CharacterControls character;
 
         /// <summary>
-        /// Gamepad for character input
+        /// Default floor below the player for most tests.
+        /// </summary>
+        private GameObject floor;
+
+        /// <summary>
+        /// Gamepad for character input.
         /// </summary>
         private Gamepad gamepad;
 
@@ -92,6 +97,13 @@ namespace CCDemo.Tests
             _ = go.AddComponent<PlayerInput>();
             go.name = "character";
 
+            // Add a floor below the player.
+            this.floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+
+            // Make the floor large
+            this.floor.transform.localScale = Vector3.one * 10;
+            this.floor.transform.position = this.character.GetComponent<Collider>().bounds.min + Vector3.down * CharacterControls.Epsilon;
+
             // Setup gamepad, needs to be done in SetUp method
             this.gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -114,6 +126,13 @@ namespace CCDemo.Tests
         [TearDown]
         public override void TearDown()
         {
+            // If the floor still exists delete it
+            if (this.floor != null)
+            {
+                GameObject.DestroyImmediate(this.floor);
+            }
+
+            // Clean up created resources
             GameObject.DestroyImmediate(this.character.gameObject);
             GameObject.DestroyImmediate(this.mainCamera);
             base.TearDown();
@@ -423,43 +442,45 @@ namespace CCDemo.Tests
         {
             // Assert player state in idle state
             this.Set(this.MoveInput, Vector2.zero);
-            Assert.IsTrue(character.playerState == PlayerState.Idle);
-            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            floor.transform.position = character.GetComponent<Collider>().bounds.min;
+            Assert.IsTrue(character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {character.playerState}");
 
             // When the player presses forward, we should transition to walking state
             this.Set(this.MoveInput, Vector2.up);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Walking);
+            Assert.IsTrue(character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {character.playerState}");
 
             // When the player releases forward, we should transition back to idle
             this.Set(this.MoveInput, Vector2.zero);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Idle);
+            Assert.IsTrue(character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {character.playerState}");
 
             // Remove floor from below player while idle, should transition to falling
-            yield return null;
             GameObject.DestroyImmediate(floor);
-            Assert.IsTrue(character.playerState == PlayerState.Falling);
+            yield return null;
+            Assert.IsTrue(character.playerState == PlayerState.Falling, $"Expected player state to be {PlayerState.Falling} but instead found {character.playerState}");
 
             // Add floor below player while idle, should transition to idle
-            yield return null;
             floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            Assert.IsTrue(character.playerState == PlayerState.Idle);
+            this.floor.transform.position = this.character.GetComponent<Collider>().bounds.min + Vector3.down * CharacterControls.Epsilon;
+            yield return null;
+            Assert.IsTrue(character.playerState == PlayerState.Idle, $"Expected player state to be {PlayerState.Idle} but instead found {character.playerState}");
 
             // When the player presses forward, we should transition to walking state
             this.Set(this.MoveInput, Vector2.up);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Walking);
+            Assert.IsTrue(character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {character.playerState}");
 
             // Remove floor from below player while walking, should transition to Falling
-            yield return null;
             GameObject.DestroyImmediate(floor);
-            Assert.IsTrue(character.playerState == PlayerState.Falling);
+            yield return null;
+            Assert.IsTrue(character.playerState == PlayerState.Falling, $"Expected player state to be {PlayerState.Falling} but instead found {character.playerState}");
 
             // Add floor below player while falling and pressing forward, should transition to Walking
+            floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            this.floor.transform.position = this.character.GetComponent<Collider>().bounds.min + Vector3.down * CharacterControls.Epsilon;
+            this.Set(this.MoveInput, Vector2.up);
             yield return null;
-            Assert.IsTrue(character.playerState == PlayerState.Falling);
+            Assert.IsTrue(character.playerState == PlayerState.Walking, $"Expected player state to be {PlayerState.Walking} but instead found {character.playerState}");
             GameObject.DestroyImmediate(floor);
         }
 
@@ -471,7 +492,6 @@ namespace CCDemo.Tests
         public IEnumerator TestPlayerFalling()
         {
             // Put a floor below the player and move the player above the floor
-            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             floor.transform.position = Vector3.zero;
             character.transform.position = Vector3.up * 5;
 
@@ -505,6 +525,9 @@ namespace CCDemo.Tests
         public IEnumerator MoveWhileFalling()
         {
             // Don't put a floor below the player.
+            GameObject.DestroyImmediate(floor);
+            floor = null;
+
             // Set move input to forward
             Set(MoveInput, Vector2.up);
 

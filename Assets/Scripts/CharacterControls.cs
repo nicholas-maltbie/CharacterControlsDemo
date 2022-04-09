@@ -236,7 +236,7 @@ namespace CCDemo
                     // Transition to walking state if player is moving and grounded
                     else if (moving && OnGround)
                     {
-                        this.playerState = PlayerState.Idle;
+                        this.playerState = PlayerState.Walking;
                     }
                     break;
             }
@@ -368,12 +368,6 @@ namespace CCDemo
                     position += remaining;
 
                     // Exit as we are done bouncing
-                    break;
-                }
-
-                // If we are overlapping with something, just exit.
-                if (hit.distance == 0)
-                {
                     break;
                 }
 
