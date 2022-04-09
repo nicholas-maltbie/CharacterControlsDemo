@@ -486,11 +486,6 @@ namespace CCDemo.Tests
 
                 // Assert that player is moving down
                 Assert.IsTrue(delta.y <= CharacterControls.Epsilon, $"Expected player to be moving down but instead found motion {delta.y}");
-
-                if (delta.y <= CharacterControls.Epsilon)
-                {
-                    Assert.IsTrue(character.playerState == PlayerState.Falling, $"Expected player to be in state {PlayerState.Falling} but instead found {character.playerState}");
-                }
             }
 
             // Assert that player has hit the ground

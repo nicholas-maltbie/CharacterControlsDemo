@@ -94,6 +94,11 @@ namespace CCDemo
         public float playerSpeed = 5.0f;
 
         /// <summary>
+        /// Speed at which the player falls.
+        /// </summary>
+        public float fallSpeed = 5.0f;
+
+        /// <summary>
         /// Speed of player rotation in degrees per second.
         /// </summary>
         public float rotationSpeed = 180.0f;
@@ -183,6 +188,9 @@ namespace CCDemo
             Vector2 movementInput = this.moveAction.ReadValue<Vector2>();
             Vector2 lookInput = this.lookAction.ReadValue<Vector2>();
 
+            // Update grounded state
+            OnGround = CastSelf(transform.position, transform.rotation, Vector3.down, 0.01f, out RaycastHit ground);
+
             // Is the player moving
             bool moving = movementInput.magnitude > 0.001f;
 
@@ -194,6 +202,11 @@ namespace CCDemo
                     this.playerState = PlayerState.Idle;
                     break;
                 case PlayerState.Idle:
+                    // Transition to falling if not on ground.
+                    if (!OnGround)
+                    {
+                        this.playerState = PlayerState.Falling;
+                    }
                     // Transition to walking state if player is moving
                     if (moving)
                     {
@@ -202,12 +215,29 @@ namespace CCDemo
 
                     break;
                 case PlayerState.Walking:
-                    // Transition o idle state if player is not moving
-                    if (!moving)
+                    // Transition to falling if not on ground.
+                    if (!OnGround)
+                    {
+                        this.playerState = PlayerState.Falling;
+                    }
+                    // Transition to idle state if player is not moving
+                    else if (!moving)
                     {
                         this.playerState = PlayerState.Idle;
                     }
 
+                    break;
+                case PlayerState.Falling:
+                    // Transition to idle state if player is not moving and grounded
+                    if (!moving && OnGround)
+                    {
+                        this.playerState = PlayerState.Idle;
+                    }
+                    // Transition to walking state if player is moving and grounded
+                    else if (moving && OnGround)
+                    {
+                        this.playerState = PlayerState.Idle;
+                    }
                     break;
             }
 
@@ -222,6 +252,14 @@ namespace CCDemo
                     // rotate camera and move player when walking
                     this.RotatePlayer(lookInput);
                     this.MovePlayer(this.GetPlayerMovement(movementInput));
+                    break;
+                case PlayerState.Falling:
+                    // rotate camera and move player when falling
+                    this.RotatePlayer(lookInput);
+                    this.MovePlayer(this.GetPlayerMovement(movementInput));
+
+                    // As well as fall down
+                    this.MovePlayer(Vector3.down * fallSpeed * Time.deltaTime);
                     break;
             }
 
